@@ -23,10 +23,19 @@ class PateticoPlugin(BeetsPlugin):
         'arranger'}
 
     def __init__(self):
-        super().__init__('patetico')
+        super(PateticoPlugin, self).__init__('patetico')
 
-        self.register_listener('trackinfo_received', self.on_trackinfo_received)
-        self.register_listener('albuminfo_received', self.on_albuminfo_received)
+        self.config.add({
+            'apostrophe': True,
+            'zero_padding': True
+        })
+
+        if self.config['apostrophe']:
+            self.register_listener('trackinfo_received', self.on_trackinfo_received)
+            self.register_listener('albuminfo_received', self.on_albuminfo_received)
+
+        if self.config['zero_padding']:
+            self.register_listener('write', self.on_write)
 
     def _replace_apostrophe(self, item, tag):
         if not hasattr(item, tag):
@@ -54,3 +63,7 @@ class PateticoPlugin(BeetsPlugin):
         info.decode()
         for tag in self.track_tags:
             self._replace_apostrophe(info, tag)
+
+    def on_write(self, item, path, tags):
+        width = max(2, len(str(tags['tracktotal'])))
+        tags['track'] = str(tags['track']).zfill(width)
